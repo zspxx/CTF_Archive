@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Archive</title>
+    <style>
+        /* CSS Variables for easy color management */
+        :root {
+            --bg-dark: #121417;
+            --card-bg: #1e2227;
+            --card-hover: #2c323a;
+            --text-main: #e0e0e0;
+            --text-muted: #9da5b4;
+            --accent-blue: #4a9eff;
+            --accent-pink: #ff4ad5;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            padding: 2rem;
+            text-align: center;
+            border-bottom: 1px solid #2d333b;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Category Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 120px;
+        }
+
+        .card:hover {
+            background-color: var(--card-hover);
+            transform: translateY(-5px);
+            border-color: var(--accent-blue);
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .card .points {
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* Navigation */
+        .back-btn {
+            background: none;
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        /* MODAL STYLES (NEW DESIGN) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #212529;
+            color: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 550px;
+            max-width: 95%;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            border-bottom: 1px solid #32383e;
+            padding: 1rem 1rem 0 1rem;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .tab.active {
+            background: #2c3034;
+            border: 1px solid #32383e;
+            border-bottom: none;
+            margin-bottom: -1px;
+        }
+
+        .modal-body {
+            padding: 3rem;
+            text-align: center;
+        }
+
+        #modal-title {
+            font-size: 2.2rem;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .modal-points {
+            font-size: 2rem;
+            margin: 5px 0;
+            color: #fff;
+        }
+
+        .modal-author {
+            color: #9da5b4;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+        }
+
+        #modal-desc {
+            text-align: left;
+            margin: 1.5rem 0;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        /* Download Button Style */
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #5a6b89;
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            float: left;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .modal-input-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 1rem;
+            clear: both;
+        }
+
+        .flag-input {
+            flex-grow: 1;
+            background: transparent;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 14px;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .submit-btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #666;
+            padding: 0 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        /* Feature Styles */
+        .terminal-cmd {
+            color: var(--accent-pink);
+            font-family: monospace;
+            background: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .hint-container {
+            margin-top: 10px;
+            text-align: left;
+        }
+
+        .hint-btn {
+            background: #2d333b;
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-bottom: 5px;
+        }
+
+        .hint-text {
+            display: none;
+            background: #121417;
+            padding: 10px;
+            border-left: 3px solid var(--accent-blue);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .challenge-img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #444;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>CTF Archive</h1>
+    </header>
+
+    <div class="container">
+        <button class="back-btn" id="backBtn" onclick="showCategories()">← Back to Categories</button>
+        <h2 id="view-title">Challenge Categories</h2>
+        <div id="main-grid" class="grid"></div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <div class="tab active">Challenge</div>
+            </div>
+            <div class="modal-body">
+                <h2 id="modal-title">Challenge Name</h2>
+                <div class="modal-points" id="modal-points">150</div>
+                <div class="modal-author" id="modal-author">AM</div>
+
+                <div id="modal-desc"></div>
+                <div id="modal-hints"></div>
+                <div id="modal-image"></div>
+                <div id="modal-footer"></div>
+
+                <div class="modal-input-group">
+                    <input type="text" class="flag-input" placeholder="Flag">
+                    <button class="submit-btn">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctfData = {
+            "Networking": [
+                { name: "Ping Pong 1", author: "MG", points: 50, desc: "My friends all love ping-pong and I think they are bored. They are sending me a LOT of ping traffic. I know one of the senders is on a Windows machine. Can you identify their IP address?<br><br>Put your flag in the form of: cyber{IP Address}", file: "Ping_Pong.pcapng" },
+                { name: "Unexpected Download", author: "TG", points: 50, desc: "Analyze this PCAP file containing HTTP requests. One request reveals the name of a well known music artist in a file path. Who is it?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(firstname_lastname} so if the music artist was Frank Sinatra, we would accept cyber{Frank_Sinatra} or cyber{frank_sinatra}.", file: "challenge2.pcap" },
+                { name: "Wired SET 1", author: "AG", points: 50, desc: "What is the IP address of the device doing a SET Credential Harvesting attack?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(IP address} so if the IP address was 127.0.0.1, we would accept cyber{127.0.0.1}", file: "Wired_Set.pcapng" },
+                { name: "Javanet", author: "AM", points: 50, desc: "Run the server.<br><br>Run the client.<br><br>Get a flag.", file: "javanet.zip" },
+                { name: "Why-Fi 1", author: "MG", points: 50, desc: "You just sat down at a new coffee shop for a latte and free wi-fi. But you've heard public wi-fi isn't always safe so you do a quick packet capture to check it out. What channel number and frequency did your connection use as you browsed a website?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(channel number_frequency;} so if the channel number was 127 and the frequency was 1000, we would accept cyber{127_1000}", file: "coffee_shop_wifi.pcapng" },
+                { name: "Down in the Dumps 1", author: "MG", points: 50, desc: "Usually I use Wireshark but instead my friend gave me this text file to practice a different way to analyze network traffic. Can you figure out the IP address of the scanning device?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the IP address was 127.0.0.1, we would accept cyber{127.0.0.1}", file: "Dumps.zip" },
+                { name: "Scanner 1", author: "MG", points: 50, desc: "One of the devices has port 22 open. What is the version number of the service running on that port?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the service version number was 2.6x6, we would accept cyber{2.6x6}", file: "ScanThis.pcapng" },
+                { name: "Quest for the Cup 1", author: "JM", points: 50, desc: "There has been a cyber attack on the New Jersey Devils servers! Find the hostname of the machine that was targeted by the attackers.<br><br>Note1: this challenge uses dashes instead of underscores. Example: {this-is-a-flag}<br><br>Note2: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(hostname} so if the hostname was the-best-host, we would accept cyber{the-best-host}<br><br>Note3: This pcap is used for multiple challenges so if you find a flag it may be for a different challenge.", file: "the_rock_incident.pcap" },
+                { name: "Quest for the Cup 2", author: "JM", points: 50, desc: "The attackers used hydra, a remote password cracking program, to brute force the username and password of one of the users on the New Jersey Devils servers. Find the username and password that they used to break in.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(username_password} .<br><br>Note: This challenges uses the same pcap file provided in Quest for the Cup 1. This pcap is used for multiple challenges so if you find a flag it may be for a different challenge.", file: "the_rock_incident.pcap" },
+                { name: "Quest for the Cup 3", author: "JM", points: 75, desc: "During the incident the attacker opened a file while connected to the server. The flag will be in the file that they opened.<br><br>Note : This challenges uses the same pcap file provided in Quest for the Cup 1. This pcap is used for multiple challenges so if you find a flag it may be for a different challenge.", file: "the_rock_incident.pcap" },
+                { name: "Wired SET 2", author: "AG", points: 100, desc: "It seems like only one of the victims of the Credential Harvesting attack even tried to keep their credentials secure. What is their password?<br><br>This challenge uses the same pcapng file provided in Wired SET 1.", file: "Wired_Set.pcapng" },
+                { name: "Wired SET 3", author: "AG", points: 100, desc: "The attacker communicated with his friend about his love of SET. What SET codename is hinted at, and what is the destination port used when the hint is sent?<br><br>This challenge uses the same pcapng file provided in Wired SET 1.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(codename_port} so if the codename was Mickey and the port was 80, we would accept cyber{Mickey_80}", file: "Wired_Set.pcapng" },
+                { name: "Why-Fi 2", author: "MG", points: 100, desc: "You sent an email to warn your teacher about the chaos on the coffee shop wifi. What is the BSSID of the Access Point you are connected to when you send the email?<br><br>This challenge uses the same pcap.png file as Why-Fi 1.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the BSSID number was 01:02:03:04:05:06, we would accept cyber{01:02:03:04:05:06}", file: "coffee_shop_wifi.pcapng" },
+                { name: "Down in the Dumps 2", author: "MG", points: 100, desc: "He said the traffic is an innocent scan - but if it's so friendly, why did they use this type of scan?<br><br>This challenges uses the same file as the Down in the Dumps 1 challenge.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the scan type was Xmas scan, we would accept cyber{xmas_scan} or cyber{xmas}", file: "Dumps.zip" },
+                { name: "Scanner 2", author: "MG", points: 100, desc: "One of these network devices clearly should have updated their anti-malware software. What’s the port # and name of the malware running on the device?<br><br>This challenge uses the same pcap file as the Scanner 1 challenge.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(portnumber_malwarename} so if the port number was 5678 and the malware was Zeus, we would accept cyber{5678_zeus}", file: "ScanThis.pcapng" },
+                { name: "Quest for the Cup 4", author: "JM", points: 100, desc: "The attacker went to a web page that was located on the server. In one of the pictures on that web page there is a hidden message. Find the flag.<br><br>Note: This challenges uses the same pcap file provided in Quest for the Cup 1. This pcap is used for multiple challenges so if you find a flag it may be for a different challenge.", file: "the_rock_incident.pcap" },
+                { name: "Quest for the Cup 5", author: "JM", points: 100, desc: "During the attack, the attacker was able to exfiltrate a file off of the server. Find the file and the flag is in there.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{flag} .<br><br>Note: This challenges uses the same pcap file provided in Quest for the Cup 1. This pcap is used for multiple challenges so if you find a flag it may be for a different challenge.", file: "the_rock_incident.pcap" },
+                { name: "Nothing to \"C\" Here", author: "MG", points: 150, desc: "You’re the first one in this morning, and users are already complaining that “the network is down.” The night shift team captured some traffic while trying to figure out what was wrong but didn’t finish the job. Initial reports suggest users were trying to access common websites when the disruption occurred. Take a look at the pcap and see if you can figure out what’s actually causing the problem.", file: "Analysis.pcap" },
+                { name: "Ping Pong 2", author: "MG", points: 150, desc: "One friend thinks it's funny to send me a coded message using ping. Can you find the right packet and decode the message?<br><br>This challenges uses the same pcap file as Ping Pong 1<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"supertechie\", we would accept cyber{supertechie}", file: "Ping_Pong.pcapng" },
+                { name: "Vendors", author: "AM", points: 150, desc: "cyber{00-50-F2 00-03-93 00-40-96 _ 00-AA-00 00-00-F0 _ 00-0E-ED 00-14-4F 00-0A-EB _ 00-AA-00 00-0F-12 00-50-56 6}", file: null },
+                { name: "Down in the Dumps 3", author: "MG", points: 150, desc: "Did you know you can say Hi with an nmap scan?<br><br>This challenges uses the same file as the Down in the Dumps 1 & 2 challenges.", file: "Dumps.zip" },
+                { name: "Ping Pong 3", author: "MG", points: 250, desc: "The same friend sent me another message in this ping mess but I can't find it! Clearly he used a part of the packet that I've never thought to look at.<br><br>This challenges uses the same pcap file as Ping Pong 1<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"play_for_fun\", we would accept cyber{play_for_fun}", file: "Ping_Pong.pcapng" }
+            ],
+            "Binary Exploitation": [
+                { name: "AC", author: "JM", points: 50, desc: "Everyone is so interested in running a program to find a flag. Maybe there's an easier way?", file: "theboardwalk" },
+                { name: "Secret", author: "AM", points: 50, desc: "Find the password, change the password, get a flag. <br><br>Note, we can't provide a working Mac ARM binary for this challenge, but reading about why it <a href=\"https://eclecticlight.co/2025/04/26/a-brief-history-of-code-signing-on-macs/\" target=\"_blank\" style=\"color: #4a9eff;\">doesn't work</a> on an ARM Mac might help you find the flag on an Intel machine.", file: "secret.zip" },
+                { name: "File Not Found", author: "AM", points: 100, desc: "We had to let one of our programmers go because of poor documentation of error messages. Maybe you can still find a way to get a flag without a detailed error message?", file: "file.linux.x64" },
+                { name: "Cup O'Joe", author: "AM", points: 100, desc: "<strong>&lt;Cthon98&gt;</strong> hey, if you type in your pw, it will show as stars<br><strong>&lt;Cthon98&gt;</strong> ********* see!", file: "mystery" },
+                { name: "runme 5", author: "AM", points: 100, desc: "LOL. This one is so difficult we skipped 3 and 4. Good luck running it!", file: "runme5" },
+                { name: "runme 2", author: "AM", points: 100, desc: "One binary again? You'll have to run it, one way or the other.", file: "runme2" },
+                { name: "Coordinates Crazy", points: 100, desc: "\"My friend sent me a Python file that is supposed to tell me where on the University of Alabama campus our secret meeting location is tonight, along with this message: [97, 97, 124, 96, 99, 97, 96, 100, 97] [127, 106, 101, 124, 103, 102, 102, 102, 100, 97]. Can you tell me where we're supposed to meet?<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the building name was Big Building, we would accept cyber{Big_Building} or cyber{big_building} <br><br> Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "coordinates.py" },
+                { name: "Big 'Ol Snake-byte", author: "JA", points: 150, desc: "Help! I wandered into a development meeting for the University of Alabama Capture the Flag competition and everyone is talking about snakes! When I see snakes, when I hear about snakes, when I THINK about snakes... I CAN'T HANDLE IT! I managed to get one out of the way, but it left some bytes all over my computer. Can you turn these back into a flag? <br><br> NOTE: The flag for this challenge is Case Sensitive. Example flag: cyber{wh4t_fl@g} <br><br> Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "bigsnakebyte.txt" },
+                { name: "Pack a Punch", author: "JA", points: 200, desc: "Our friends at the University of Alabama chapter of the Association for Computing Machinery have this binary that we know contains a password, but it looks a little different from most of the binaries we're used to. Can help us at the Crimson Defense Cyber Security Club prove our status as the ONE TRUE COMPUTER CLUB by getting the binary back to normal and finding the flag? <br><br> NOTE: The flag for this challenge is Case Sensitive. <br><br> Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "junkcode" },
+                { name: "Jersey Bagels gets()", author: "JM", points: 250, desc: "Run the file to get the flag.", file: "jersey_bagels.zip" },
+                { name: "runme", author: "AM", points: 250, desc: "This executable just won’t work—seems to want an ARM Mac. But sometimes what it claims to be isn’t what it needs to run.", file: "runme" },
+                { name: "Time Capsule", author: "BSS", points: 250, desc: "My friends who go to the Witt Student Activity Center at the University of Alabama always talk about how great it is to have lockers there. Since I spend all my time at the Crimson Defense Cyber Security Club, I decided to make a digital lockbox instead! Problem is, I forgot to retrieve my flag from the box before time was up, and now I can't open it again! Can you help me get it back? <br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the function output was* th3fl4g*, we would accept cyber{th3_fl4g} <br><br> Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "Timecapsule" },
+                { name: "Format", author: "AM", points: 300, desc: "Find the secret number, get a flag!", file: "format.linux.x64" },
+                { name: "Bashed", author: "BSS", points: 300, desc: "A Cyber Security student at the University of Alabama left this strange authentication script on one of the student machines in the Cyber Lab. Can you figure out what the password is? <br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the password was flag4, we would accept cyber{flag4} <br><br> Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "login.sh" },
+            ],
+            "Web Security": [
+                { name: "Getaway", author: "AM", points: 50, desc: "Garden State Cyber is extremely proud of its state of the art 2019 login system. Why should we bother updating it... it is secure.. right?<br><br><a href='https://gardenstate-web.chals.io/getaway/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/getaway/</a>", file: null },
+                { name: "wget", author: "AM", points: 50, desc: "There is a flag here, but you must use a specifc command line tool to get to it.<br><br><a href='https://gardenstate-web.chals.io/wget' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/wget</a>", file: null },
+                { name: "Bypass", author: "AM", points: 50, desc: "We just fired an employee who couldn't get a simple button working! Imagine how insecure the rest of the website must be if you can get the button working!<br><br><a href='https://gardenstate-web.chals.io/bypass' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/bypass</a>", file: null },
+                { name: "Jersey Beach", author: "JM", points: 50, desc: "Hidden beneath the Sand Castle is the flag. See if you can dig in and find it.<br><br><a href='https://gardenstate-web.chals.io/jerseybeach/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/jerseybeach/</a>", file: null },
+                { name: "Jersey Jolt", author: "JM", points: 50, desc: "The Jersey Jolt Skeeball game is down and needs ADMIN access in order to get it working. Once you have that play the game to get the flag.<br><br><a href='https://gardenstate-web2.chals.io/jersey_jolt/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/jersey_jolt/</a>", file: null },
+                { name: "NJ Archives", author: "JM", points: 50, desc: "The Admin created this program and hid the password to the server in one of the files but we can't seem to access it. Find the file with the password in it.<br><br><a href='https://gardenstate-web2.chals.io/nj_archives/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/nj_archives/</a>", file: null },
+                { name: "Client Side", author: "AM", points: 75, desc: "Bob tried to secure his AP CS A homework with a little JavaScript, incorrectly thinking Java and Javascript where the same thing. He needs your help to gain access again so he can turn in his homework in time.<br><br><a href='https://gardenstate-web.chals.io/clientside/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/clientside/</a>", file: null },
+                { name: "2048", author: "AM", points: 75, desc: "Win a pure JavaScript game, maybe find a flag. Or perhaps there is another way...<br><br><a href='https://gardenstate-web.chals.io/2048/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/2048/</a>", file: null },
+                { name: "EZ Pass", author: "JM", points: 75, desc: "You are in a race to go from one end of the parkway and back but all you have is some old parkway tokens. Disable all the toll booths so you don't get fined going through the EZPass lane at high speeds.<br><br><a href='https://gardenstate-web2.chals.io/parkway/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/parkway/</a>", file: null },
+                { name: "Getaway 2", author: "AM", points: 100, desc: "OK, OK, Version 2.2. Garden State Cyber has fixed the problems in the 2019 login system. Welcome to the 2026 login system! No vulnerabilities... we hope...<br><br><a href='https://gardenstate-web.chals.io/getaway2/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/getaway2/</a>", file: null },
+                { name: "Robo-Loop", author: "SN", points: 100, desc: "Jimmy Bob has lost his special note. He can't find the file it's hidden in. Help him fast!<br><br><a href='https://gardenstate-web2.chals.io/roboloop/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/roboloop/</a>", file: null },
+                { name: "ClosedClaw", author: "AM", points: 100, desc: "The President of Garden State Cyber needed a virtual assistant, but after hearing about <a href='https://www.vectra.ai/blog/clawdbot-to-moltbot-to-openclaw-when-automation-becomes-a-digital-backdoor' target='_blank' style='color: #4a9eff;'>recent problems with OpenClaw</a>, she asked the minions to create a closed-source clone: ClosedClaw.<br><br>ClosedClaw is a control panel for a powerful AI assistant gateway system. While the system appears to be locked down with authentication, misconfigurations could lead to dangerous security vulnerabilities. Of course, what could go wrong with closed source software?<br><br><a href='https://gardenstate-web2.chals.io/closed/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/closed/</a>", file: null },
+                { name: "Client Verification", author: "AM", points: 100, desc: "This site only responds to requests from an approved client.<br><br>Conveniently, it tells you what it detected when you connect.<br><br>Can you make a request that passes the check?<br><br><a href='https://gardenstate-web.chals.io/newbrowser/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/newbrowser/</a>", file: null },
+                { name: "Show Me the ... Boats?", author: "AM", points: 150, desc: "Post-competition note: because this is a friendly website outside our domain we want to avoid too much CTF traffic. Check out the source code and scroll way down ;)", image: "boat.png", file: "boat.png" },
+                { name: "We Have a Situation", author: "JM", points: 150, desc: "The cast of the Jersey Shore has placed a secret in the database and they can't seem to find it. Help them out and get the flag.<br><br><a href='https://gardenstate-mariadb.chals.io/jscdb/' target='_blank' style='color: #4a9eff;'>https://gardenstate-mariadb.chals.io/jscdb/</a>", file: null },
+                { name: "Path to Victory", author: "JM", points: 250, desc: "Taylor Ham couldn't possibly have that many votes. There must be something we can do to give Pork Roll the edge! Get Pork Roll's total greater than Taylor Ham's to win!<br><br><a href='https://gardenstate-victory.chals.io/' target='_blank' style='color: #4a9eff;'>https://gardenstate-victory.chals.io/</a>", file: null },
+                { name: "Secret Languages", author: "SN", points: 300, desc: "One of the Garden State Cyber interns decided to learn how to vibe code flask apps on production code. Uh oh! What could possibly go wrong?<br><br><a href='https://gardenstate-secret.chals.io/' target='_blank' style='color: #4a9eff;'>https://gardenstate-secret.chals.io/</a>", file: null },
+                { name: "Developer Tools", author: "AM", points: 300, desc: "Garden State Cyber just published our all new web store! We vibecoded only using the best AI, so there coudn't possibly be any flags hidden here... right...?<br><br><a href='https://gardenstate-web.chals.io/react/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/react/</a>", file: null },
+                { name: "Next Please!", author: "AM", points: 300, desc: "Garden State Cyber is in the process of finishing off our next website! What would a Garden State Cyber website be without a flag somewhere?<br><br><a href='https://gardenstate-next.chals.io/' target='_blank' style='color: #4a9eff;'>https://gardenstate-next.chals.io/</a>", file: null }
+            ],
+            "Forensics": [
+                { name: "Jersey.zip", author: "JM", points: 50, desc: "1,000 files. One flag. You have the ZIP, now find the \"city\" where the data originated.", file: "Jersey.zip" },
+                { name: "Network Safari", author: "TL", points: 50, desc: "Given a packet capture file, identify the animal shown in the image.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{animal} so if the animal shown was \"elephant\", we would accept cyber{elephant}.", file: "challenge1.pcap" },
+                { name: "Calico", author: "JM", points: 50, desc: "Calico has a message for you hidden in the picture. Find it. <br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{hidden_text} so if the hidden text was \"jersey_is_great\", we would accept cyber{jersey_is_great}", file: "calico.jpg" },
+                { name: "Why 67??!", author: "MG", points: 50, desc: "Okay but WHY 67 though? Dig deep and tell me what I’m missing.", file: "Why67.jpg" },
+                { name: "EZ-Pass Lane", author: "JM", points: 50, desc: "Time to fly through the tollbooth to highway 9. Use the file of hashed passwords to find Bruce's password.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}.", file: "toll_tickets.txt" },
+                { name: "Cyber Panda", author: "TG", points: 50, desc: "The Cyber Panda in this gif is ready to fight — but that’s not the interesting part.", file: "panda.gif" },
+                { name: "Not Telling You", author: "TG", points: 50, desc: "Run the program and it basically tells you “nice try.” Up to you what to do with that to find the real message.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"tech_really_rocks\", we would accept cyber{tech_really_rocks}.", file: "chal9" },
+                { name: "The House of Chthon", author: "AM", points: 50, desc: "You haven't lived until you've played Quake 1 on a real CRT monitor. We hear this photo was taken at a NJ University. Can you figure out which one? <br><br> This challenge does not provide the cyber{} part of the flag andso the flag should be formatted as cyber(} so if the university was Harvard University, we would accept cyber{harvard} and cyber{harvard_university}", image: "quake.jpg", file: "quake.jpg" },
+                { name: "*REDACTED*", author: "AM", points: 50, desc: "Redacted information in PDF files stays redacted... right?", file: "NJ_CellPhone_Policy_REDACTED.pdf" },
+                { name: "Snow Storm", author: "N/A", points: 50, desc: "Be sure to check on NJ storm regulations. You might even find a flag!", file: "Ordinance_2026_Snow_Covered_Streets.pdf" },
+                { name: "Agent Fry", author: "JS", points: 75, desc: "Find the flag it's inside of this picture.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{flag_info} so if the flag was \"tech_is_fun\", we would accept cyber{tech_is_fun}", file: "double_o_fry.png" },
+                { name: "Dinosaur", author: "AM", points: 75, desc: "", file: "stegosaurus.jpg" },
+                { name: "Exact Change", author: "JM", points: 75, desc: "It is time to do it your way! Find Frank's password using the hashes and the password list.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}", file: "exact_change.zip" },
+                { name: "Buffer", author: "AM", points: 75, desc: "Goldilocks says this string is too hot and that string is too cold. Is there a string that is warm?", file: "buffer.zip" },
+                { name: "Hidden in Plain Sight 2", author: "TG", points: 75, desc: "This file does not appear to open correctly and the contents seem unreadable at first. Can you figure out how to properly view the file to reveal the hidden message?", file: "chal10.bin" },
+                { name: "Transistor", author: "JM", points: 75, desc: "Bell Labs was famous for packing a lot of power into small packages—just like the transistor. Walk into the binary and see what's hiding in the foundation.", file: "transistor.jpg" },
+                { name: "Operation: Zero Day", author: "BV", points: 100, desc: "Subject: URGENT: Critical Vulnerability in Production - ACT IMMEDIATELY<br><br> We just received a critical alert. A new zero-day vulnerability (CVE-2026-0000) has been disclosed in the open-source library “lib-secure-login”.<br><br> This is a Remote Code Execution (RCE) vulnerability. If exploited, attackers can take full control of our servers.<br><br> Our threat intelligence team has determined that the vulnerability only triggers under specific conditions: (1) The installed version of lib-secure-login is older than 2.4.1. (2) The container's configuration has \"debug_mode\" set to true.<br><br> Our centralized software inventory dashboard is currently down, so we cannot search for this automatically. We have managed to dump the raw Software Bill of Materials (SBOM) and configuration files for all 10,000 active containers in our production environment.<br><br> Your Mission: (1) Download the attached data dump. (2) Write a script to scan the 10,000 JSON files. (3) Identify the single container ID that meets both vulnerable conditions.<br><br> We need that ID immediately so we can isolate it before the attackers find it.<br><br> **PS: Warning: **This zip file contains 10,000 small files. Do not try to open the folder in Finder/Explorer. Use the command line or a script to process them. To filter out false positives (containers which are not affected by this vulnerability), make sure you check for the exact library name and strict version requirements. If your script relies on simple text searching (grep), you will likely find the wrong container.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{container ID} so if the container ID was abc-12345-defg, we would accept cyber{abc-12345-defg}", file: "assets_-_Bobby_Villaluz.zip" },
+                { name: "Computerman", author: "JS", points: 100, desc: "Find the flag - it's inside of this picture.", file: "meme_man.png" },
+                { name: "Glory", author: "JS", points: 100, desc: "Find the flag - it's inside of this picture.", file: "glory.png" },
+                { name: "Le Hackermans", author: "N/A", points: 100, desc: "There's something awry with this image file. See if you can figure out the issue and uncover the flag.", file: "hackermans.jpg" },
+                { name: "Cash Only", author: "JM", points: 150, desc: "OOOOOH!!!! We're half way there!<br><br>Find Bon Jovi's password to get the flag by modifying the jersey.rules file to help you. The flag will be in the format cyber{Bon Jovi's password}.<br><br>This is also a good opportunity to point out the man who created most of these passwords rules has <a href='https://www.cbc.ca/radio/asithappens/as-it-happens-wednesday-edition-1.4240252/man-who-made-passwords-hard-to-remember-regrets-rules-that-drive-people-crazy-1.4240255' target='_blank' style='color: #4a9eff;'>apologized</a> for making them.", file: "cash_only.zip" },
+                { name: "Deleted Does Not Mean Gone", author: "TG", points: 200, desc: "Not all deleted data is immediately overwritten.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(deleted_data}.", file: "challenge4.img" },
+                { name: "Solid Effort", author: "JD", points: 300, desc: "These images look the same, but are they? Could one hide a flag? Hint: So many pixels...", file: ["grey.webp", "grey.png"] },
+                { name: "Mystery", author: "AM", points: 300, desc: "It really is a mystery.", file: "mystery1" },
+                { name: "Access Control 1", author: "BSS", points: 300, desc: "We recovered this access control log for the Chamber of Secrets in the Cyber Security Lab at the University of Alabama. Three Lab Staff and the four Crimson Defense Executive Officers have access, and each Executive Officer has an Assigned Staff Member. The Chamber unlocks at 9 AM CST each day and locks again at 5 PM. Which Chamber member had their ID card duplicated? Provide their ID.<br><br>Extra info: The ID shown in the log is not the full badge ID. Submit the complete badge number used by the Chamber system.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{} so if the ID was 123456789, we would accept cyber{123456789}<br><br>Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "20250108150000" }
+            ],
+            "Crypto & Encoding": [
+                { name: "UNIX to UNIX", author: "AM", points: 50, desc: "When you can't count on 8 bits.", file: "flag.enc" },
+                { name: "Mainframe Madness", author: "LD", points: 50, desc: "I recently was examining some files on the company's IBM Mainframe, which is based in the United States. All was going well, but I needed to take some work home to finish. I transferred some text files over to my Ubuntu machine to continue my analysis, but the contents of the file didn't look anything like they did on the mainframe! See if you can take a crack at getting the data from the mainframe into a readable format.<br><br> NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{flag_info} so if the flag was \"tech_is_fun\", we would accept cyber{tech_is_fun} ", file: "zOS_Artifact.txt" },
+                { name: "Nokia", author: "DD", points: 50, desc: "4662777555999<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}", image: "nokia.jpg" },
+                { name: "Jerry & Rod", author: "DD", points: 50, desc: "All good sports managers need a cell phone, but sometimes they don't quite keep up with the times. They might even use spaces instead of underscores! 7777 44 666 9 0 6 33 0 8 44 33 0 6 666 66 33 999<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"tech_is_fun\", we would accept cyber{tech_is_fun}", image: "nokia.jpg" },
+                { name: "Old School", author: "DD", points: 50, desc: "Cell phones are banned in NJ schools, but maybe you can sneak this in. Rumor has it the zeroes represent underscores _ instead of spaces. 22 2 222 55 0 8 666 0 8 44 33 0 333 88 8 88 777 33<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}", image: "nokia.jpg" },
+                { name: "Loops", author: "DD", points: 50, desc: "01100010 01111000 01100001 01100100 01110001 01111011 01101110 01100101 01100101 01011111 01100001 01111000 01011111 01101110 01101101 01100100 01011111 01100100 01110001 01110001 01101110 01110001 01111101", file: null },
+                { name: "Slippery Fingers", author: "MG", points: 50, desc: "After a long afternoon on the boardwalk, someone tried typing a flag, but their fingers were slippery from eating ice cream down at the Shore. What does this say?<br><br> iioa_agudr_kwdr <br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}.", hints: ["Look up common wordlist password file, rhymes with lock.", "Look up password cracking tool named after a popular london serial killer from the late 1800s."] },
+                { name: "I Use", author: "DD", points: 50, desc: "–•–• –•–– –••• • •–• { – • •–•• • ––• •–• •– •––• •••• }", file: null },
+                { name: "Julius", author: "LG", points: 50, desc: "Ciphers have been used for thousands of years. What does this one say? pvkq_pbyw_bywkx_dswoc<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}.", file: null },
+                { name: "Cracked Hash", author: "TG", points: 50, desc: "The President of Garden State Cyber is known to not have the best password etiquette and is now locked out of an important zip file. Using the attached file, can you recover her password? Rumor has it the President also likes to listen to <a href='https://www.youtube.com/watch?v=-tJYN-eG1zk' target='_blank' style='color: #4a9eff;'>Queen</a>.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_password} so if the decoded password was \"techie\", we would accept cyber{techie}", file: "hash.txt" },
+                { name: "Last Command", author: "MG", points: 50, desc: "An intern left behind an encrypted message before rushing out for the day. <br><br> We recovered the ciphertext from their computer, but the key was not stored digitally. <br><br> All we have is a photo of their desk.<br><br> LBTEI{TXAEERFYNWSPPXGRS}CEOX\"", file: "desk.jpg" },
+                { name: "Hidden in Plain Sight", author: "LG", points: 75, desc: "Steganography is the art of hiding data within ordinary files.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{flag_info} so if the flag was \"tech_is_fun\", we would accept cyber{tech_is_fun}", file: "retro_computer.jpg" },
+                { name: "Thunder", author: "DD", points: 75, desc: "Stay arms bent until it goes on.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}", hints: ["Give me a second"] },
+                { name: "Six Seeeeven", author: "AM", points: 75, desc: "6776667767777667677666766776676767776676677 <br> 7767767766676677767676777676667677777677766 <br> 7767766767677767766776676767767776676777776 <br> 7766667677767666776676767677777677677766776 <br> 7667677677766776676767777767", file: null },
+                { name: "Weird Science", author: "MG", points: 75, desc: "Your teacher went to a workshop at Liberty Science Center. Her sub plans say, “Everything you need is on the table.”<br><br> 16 13 9 68 22 39 _ 31 8 31 31 3 68 16 _ 8 7 <br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"no_more_snow\", we would accept cyber{no_more_snow}", file: null },
+                { name: "Liliputian", author: "AM", points: 75, desc: "James has mastered the art of hexadecimal to ASCII conversion but this hexadecimal seems a little more scrambled than usual.<br><br> 7D 69 5F 6B 6E 69 68 74 5F 69 5F 6E 61 63 7B 72 65 62 79 63", file: null },
+                { name: "Base Access", author: "JD", points: 100, desc: "I left my python program somewhere on this machine but it never seems to accept the password. Can you access the flag?<br><br>NOTE: This challenge was created with the format ctf{flag} instead of cyber{flag}. <br><span class='terminal-cmd'>nc 0.cloud.chals.io 18833</span>", file: null },
+                { name: "Code Breaking", author: "ME", points: 100, desc: "Peter needs you to crack the ciphertext:<br><br> rcuii{eimii_emiii_emvovs_e_iitz_sy_tzroeiu_eiitvgw}", file: null },
+                { name: "Bases Loaded", author: "AM", points: 100, desc: "Fun with bases! 👞🥅🍡👃💾📨🚗🦬💶🙂🐭🔲👚📩🧈👄👎📩🍡🐰👚🔩🚗🤛👮📈🏩🛶💦🚳🚼☕<br><br> This flag is environmentally conscious — it prefers Ecoji over Base64.", file: null },
+                { name: "On Base Percentage", author: "LG", points: 100, desc: "Encoding schemes come in all different types. What does this one say? VjFST2MyRldjRmxUYW1SYVlsVmFObGRzVWxwTlJtZD<br>VZa2h3V1Uxc1dtOVplazV6VDFFOVBRPT0=", file: null },
+                { name: "Public Knowledge", author: "TG", points: 100, desc: "You are given an encrypted file and an RSA key. Decrypt the file to reveal the hidden message.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{decoded_info} so if the decoded text was \"techie\", we would accept cyber{techie}", file: "challenge7.zip" },
+                { name: "Exclusively_Yours", author: "AM", points: 100, desc: "We think we are putting the correct key into this python3 program and it just spits out cyber{lolnottheflag!!!!!}", file: "exclusively.py" },
+                { name: "Hash & Scrambled Eggs", author: "LD", points: 100, desc: "It looks like the evil hackers known for their love of alphabetization have left some of their password hashes exposed!! If we can crack their hashes, we may be able to gain access to their resources and determine their next target. Three password hashes were recovered from their unsecured internet traffic. A list of their favorite words was also recovered? All of these passwords were recovered from an old Windows machine. Cracking these passwords and listing them alphabetically should give you the flag you seek. Warning: the flag is Case Sensitive!<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(password_password_password} so if the recovered passwords were s uv47b, t7PQx and aM42v, we would accept cyber{aM42v_t7PQx_uv47b}", file: "HashParticipantFiles.zip" },
+                { name: "Substitute Teacher", author: "AM", points: 100, desc: "Michael has a substitute teacher for his computer science class today. Being a good student, Michael is helping the substitute decode this strange message written on the board by an unknown student:<br><br>xbyvi{zxxvkg_ml_hfyhgrgfgvh}<br><br>Michael also found a strangly encoded movie script on one of the desks that might help.", file: "movie.enc" },
+                { name: "fcrack", author: "TG", points: 100, desc: "Can you access the contents of this zip file? Determine the password in order to get flag.txt. It also might help to listen to some <a href='https://www.youtube.com/watch?v=-tJYN-eG1zk' target='_blank' style='color: #4a9eff;'>music</a>.", file: "flag.zip" },
+                { name: "Roll-For-Initiative", author: "LD", points: 150, desc: "The dark lord of secrets Vecna rises from the ruins in front of you. Fear courses through your very soul, as your brave group of adventurers readies themselves for battle. Nothing can be kept hidden from the lord of secrets, but you have one last hope to overcome this challenge, discover one of Vecna's secrets. Kas, Vecna's seemingly loyal servant, now seeks to betray the lord of secrets and has provided you with one of Vecna's secret prime numbers. With the additional artifacts you've recovered from the ruins of Rivest, Shamir, and Adleman, discover Vecna's other prime number & secret key to decrypt the ancient message!", file: "VecnasKeys.txt" },
+                { name: "No Chars Allowed", author: "AM", points: 150, desc: "Wait, a text file with no flag?", file: "flag_1.txt" },
+                { name: "Anti AI, at Least the First Time", author: "AM", points: 150, desc: "ChatGPT will not work for this challenge: <br><br> 2518dc86ae6bc3197c911e9be7f92815959ef9bd01", file: "decode.py" },
+                { name: "The Social Network", author: "AM", points: 200, desc: "Garden State Cyber has decided to get into the social networking business. Take a look at our site and see what you can find! <br><br><a href='https://gardenstate-web.chals.io/social/' target='_blank' style='color: #4a9eff;'>https://gardenstate-web.chals.io/social/</a>", file: null },
+                { name: "Shadow Secrets", author: "TG", points: 300, desc: "You are provided with passwd and shadow files from a Linux device. What is the decrypted password for the only user account?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(passwordtext} so if the password was let_me_in, we would accept cyber{let_me_in}", file: "challenge6.zip" },
+                { name: "DEC", author: "AM", points: 300, desc: "You can't run this... but maybe you can decode this.", file: "dec" }
+            ],
+            "OSINT": [
+                { name: "Dirty Streams", author: "BV", points: 50, desc: "In 2018, the npm security team removed a compromised release of the popular package event-stream after it was discovered to contain a malicious dependency. This incident is a classic example of a \"Supply Chain Attack.\"<br><br>Your Task: Read the security advisories or post-mortems for this incident (npm, Snyk, or GitHub).<br><br>Identify: (1) The exact name and version of the malicious child dependency that was injected. (2) The exact version of the parent package (event-stream) that included it and was subsequently removed from the registry.<br><br>This challenge does not provide the cyber{} part of the flag. Flag Format: cyber{child-dependency@version|parent-package@version Example: bad-lib@0.9.9|vulnerable-app@1.0.0}", file: null },
+                { name: "Roadside", author: "JM", points: 50, desc: "What is the name of this NJ landmark? <br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{name} so if the name was \"Pat_the_Cat\", we would accept cyber{pat_the_cat}", image: "elephant.jpg", file: null },
+                { name: "Mega Ape", author: "SN", points: 50, desc: "The picture in this image contains part of the flag. In all lowercase (separating your words with underscore), write the name of the attraction, the route number, and the family that bought it Example: cyber{statue_name_rtnumber_family}", file: "images.jpeg" },
+                { name: "Price of My Hometown", author: "JM", points: 50, desc: "The location of this Jersey Icon's childhood home has eluded us for years. Records show the property changed hands recently. Find the price the home sold for during its last completed transaction in 2018.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber($price of home} so if the home sold for $345,129, we would accept cyber{$345,129}", file: "jerseyhome.webp" },
+                { name: "Commitment Issues", author: "BV", points: 100, desc: "The injection of the malicious dependency into event-stream (see challenge “Dirty Streams”) happened with a single git commit.<br><br>In the archived dominictarr/event-stream repository on GitHub, finding the specific moment the malicious dependency was introduced is key to understanding the timeline.<br><br>Navigate the repository's commit history to find the exact commit where the malicious dependency was added.<br><br>Identify: (1) The full 40-character Git Commit SHA of this change. (2) The exact version string (semantic version, a.k.a. “semver”) assigned to the dependency in that file (include any symbols like ^ or ~).<br><br>Flag Format: cyber{full_commit_sha|semver_string} Example: cyber{7556e89b49943a6ab15fe7f4666fb5d5d9c9561b|~0.0.3}", file: null, hints: ["On GitHub, locate the file that defines the project's dependencies (standard for Node.js projects). Then, click the History button (top right of the file view) to see a timeline of every change ever made to it."] },
+                { name: "Historic Apples", author: "AM", points: 100, desc: "Go back in time and tell us what was featured on Apple's website February 20, 2003? Here's an <a href='https://www.youtube.com/watch?v=D-QM00ABzfk' target='_blank' style='color: #4a9eff;'>origin story</a> that might help. <br><br>This challenge does not provide the cyber{} part of the flag and so the flag should be formatted as cyber(} so if the product was the iPhone 4 we would accept cyber{iphone4} and cyber{iphone_4}", file: null },
+                { name: "Hommage a picoCTF", author: "AM", points: 100, desc: "Apparently, this file will lead you to the alias of a very famous hacker.<br><br>This challenge does not provide the cyber{} part of the flag and so the flag should be formatted as cyber(hacker's alias} so if the alias was yoda, we would accept cyber{yoda}", file: "car.jpg" },
+                { name: "Compression", author: "AM", points: 100, desc: "Learning who this person in and what he was famous for doing will get you a long way towards getting a flag.", image: "compression.jpg", file: "compression.jpg" },
+                { name: "Who Did This?", author: "MG", points: 100, desc: "<img src='Pony_small.jpg' class='challenge-img' style='display:block; margin-bottom:15px;'><br>This pony is sprinting out of one of my favorite online distractions — and it has roots at a place where beavers are kind of a big deal.<br><br>Your job: identify the five original creators behind it. Enter their first names only, alphabetized, joined with underscores.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(5 creator first names} so if the creators were John, Alize, Wally, Rosa and Bruce, we would accept cyber{alize_bruce_john_rosa_wally}", file: null },
+                { name: "Dog & Teddy Bear", author: "KE", points: 100, desc: "My best friend sent me a picture from the interwebs of a dog and a Teddy Bear after we went to Crimson Defense the other day, and I want to contact the person who took it. For some reason, I'm having trouble finding their email! Can you help me?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the email address was email@domain.com9, we would accept cyber{email@domain.com}<br><br>Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "Samoyed-and-teddy-bear.jpg" },
+                { name: "Tuscaloosa Trip", author: "AL", points: 150, desc: "My friend made me a map of T-Town but I can't get it to display. She said it contains information about the best places to go in Tuscaloosa, Alabama, but I'm not sure if I believe her. How many of these places aren't in the city of Tuscaloosa?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(number of places} so if the number of places NOT in Tuscaloosa is 10, we would accept cyber{10}<br><br>Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: "Tuscaloosa_Trip.kml" },
+                { name: "Take Me To The River", author: "AM", points: 200, desc: "We doubt Google Maps will help you find the river in this video:<br><br><a href='https://drive.google.com/file/d/1gwtKUATPTNfbPiFRANtGjZIgeFpInMwZ/view?usp=sharing' target='_blank' style='color: #4a9eff;'>https://drive.google.com/file/d/1gwtKUATPTNfbPiFRANtGjZIgeFpInMwZ/view?usp=sharing</a><br><br>This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the river was Nile, we would accept cyber{nile} or cyber{nile_river}", file: null },
+                { name: "Historic NJ", author: "AM", points: 300, desc: "Garden State Cyber needed more OSINT challenges, so we sent one of our interns to take a photo of an 1800s era store in a New Jersey historic district. Little did we know they would forget to put GPS data, accidentally take a backwards facing picture, and only get a picture of a modern house across the street!<br><br>Oh well, we're out time. So we redacted the license plate and hear there are only about 1700 historic districts in New Jersey. Good luck!<br><br>This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the store was Sears Roebuck, we would accept cyber{sears} and cyber{sears_roebuck}", file: "historic.jpg" },
+                { name: "YES SIR!", author: "AL", points: 300, desc: "Congrats! You're an intern at the NSA thanks to your wonderful time spent at Crimson Defense Cyber Security Club! Your first task: find the reference number for a declassified intelligence pdf document!!! Your boss, also a former Crimson Defense member, is looking for something from the 1960s containing information about the status of German airline routes. He also mentioned something about a captain M. A. Volodymyr? Or was it W. A. Vorontsov? Not sure. You figure it out! Example flag: X/XXX/XXXXX<br><br>Post competition note: the correct document has a smudged reference number so the F looks like a P. The flag has been adjusted to accept either version.<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(} so if the status code was 7/XY4/F333A, we would accept cyber{7/XY4/F333A}<br><br>Challenge created by Crimson Defense Cyber Security Club at the University of Alabama.", file: null }
+            ],
+            "Grab Bag": [
+                { name: "A2PR#6", author: "AM", points: 50, desc: "Steve Wozniak is very proud of his latest creation. He says that it even prints lowercase! Just to prove it to you, he gives you the file CTF.dsk (see below) that contains a flag.<br><br>Realizing you may not have one of his machines, he kindly points you to: <a href='https://www.scullinsteel.com/apple/e' target='_blank' style='color: #4a9eff;'>https://www.scullinsteel.com/apple/e</a>", file: "CTF.DSK" },
+                { name: "Zork", author: "AM", points: 50, desc: "You can't have a CTF without some games, right? Let us hope this game is old school enough that it isn't blocked by your school's web filters.<br><br>Play the game and report back the one serial number in the form cyber{serialnumber}<br><br><a href='https://www.pcjs.org/software/pcx86/game/infocom/zork1/' target='_blank' style='color: #4a9eff;'>https://www.pcjs.org/software/pcx86/game/infocom/zork1/</a>", file: null },
+                { name: "Crossing the Delaware", author: "AM", points: 50, desc: "There's a lot of debate about the <a href='https://www.linkedin.com/pulse/risks-using-ai-impersonate-historical-figures-samuel-mormando-hizce/' target='_blank' style='color: #4a9eff;'>advantages and disadvantages of using AI to recreate historical events.</a><br><br>The Garden State CTF is cutting edge, so we're entering the debate with a way to find a flag!", file: "washington.mp4" },
+                { name: "Lingo 1", author: "JS", points: 50, desc: "Linux is hiding things. How do you make them show up?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(answer} .", file: null },
+                { name: "Lingo 2", author: "JS", points: 50, desc: "You can share this key with the world. What file extension gives it away?<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{answer}.", file: null },
+                { name: "Vulnerable Emojis 1", author: "MG", points: 50, desc: "What's the CVE # for this vulnerability?<br><br>🫀🩸🩸<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(CVE#} so if the correct CVE was CVE-2001-1234, we would accept cyber{CVE-2001-1234}", file: null },
+                { name: "Vulnerable Emojis 2", author: "MG", points: 50, desc: "Take the CVE Year of each vulnerability, add them together.<br><br>🖨️😱 + 🐚⚡<br><br>NOTE: This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber(Years Total} so if the first CVE was CVE-2001-1234 and the second CVE was CVE-2002-567, we would accept cyber{4003}.", file: null },
+                { name: "Scam", author: "AM", points: 50, desc: "Congratulations, you just got hired at the Garden State Cyber Help Desk! One of our users submitted a ticket with an email that might be a scam. Your job is to find out how the scam works.<br><br><a href='https://gardenstate-web2.chals.io/scam' target='_blank' style='color: #4a9eff;'>https://gardenstate-web2.chals.io/scam</a>", file: null },
+                { name: "Master Plan", author: "N/A", points: 50, desc: "We found this random ROM file. What do you make of it?", file: "game.bin" },
+                { name: "Bell Labs", author: "AM", points: 75, desc: "Did you know UNIX was invented right here in New Jersey? Step back in time and use a DEC PDP-11 and UNIX V6 to find a flag at:<br><br><a href='http://takahirox.github.io/pdp11-js/unixv6.html' target='_blank' style='color: #4a9eff;'>http://takahirox.github.io/pdp11-js/unixv6.html</a><br><br>Look up user number 6 and then figure out his last name. Be sure to lowercase the name and include it in cyber{}!", file: null },
+                { name: "Databases Lite", author: "AM", points: 75, desc: "We intercepted a New Jersey school enrollment database. Intelligence suggests one district has been compromised. The county code is 09 and the district code is 0715. Find the hidden message.", file: "nj_schools.db" },
+                { name: "Please", author: "AM", points: 75, desc: "PLEASE DO , FIND <- FLAG", file: "code" },
+                { name: "Vocab Connections", author: "MG", points: 75, desc: "Cyber vocabulary has a lot of acronyms. Can you make the right connections to make 4 groups of 4?<br><br><a href='https://gardenstate-connections.chals.io/' target='_blank' style='color: #4a9eff;'>https://gardenstate-connections.chals.io/</a>", file: null },
+                { name: "The Magic Word", author: "AM", points: 100, desc: "Our official chatbot is a little out of control. Maybe you can coax a flag out of it?<br><br><a href='https://gardenstate-chat.chals.io/' target='_blank' style='color: #4a9eff;'>https://gardenstate-chat.chals.io/</a>", file: null },
+                { name: "Not Easy Being Green", author: "AM", points: 100, desc: "", image: "frogpict.jpg", file: "frogpict.jpg" },
+                { name: "Big Blue", author: "AM", points: 200, desc: "Good luck booting this.", file: "ctf.img" },
+                { name: "Splash", author: "AM", points: 200, desc: "Play some DolphinDash... maybe find a flag?", file: "DolphinDash.jar" },
+                { name: "For the People", author: "AM", points: 250, desc: "We got this snippet from a book, but can't remember the name of the book.<br><br>We do know the book has two names and we're after the first name.<br><br>This challenge does not provide the cyber{} part of the flag so the flag should be formatted as cyber{} so if the book was Wuthering Heights, we would accept cyber{wuthering_heights}", file: "program_pict.jpg" },
+                { name: "Contain Me", author: "AM", points: 250, desc: "If you can find a way to run this and login, there is a flag to be found somewhere or other", file: "alpine.tar" },
+                { name: "Running Edge", author: "AM", points: 250, desc: "Vroom! Vroom!", file: "vroom.pdf" },
+                { name: "Invisible", author: "AM", points: 300, desc: "There's a flag here. Honest.", file: "flag.txt" }
+            ]
+        };
+
+        const mainGrid = document.getElementById('main-grid');
+        const viewTitle = document.getElementById('view-title');
+        const backBtn = document.getElementById('backBtn');
+        const modal = document.getElementById('modalOverlay');
+
+        function showCategories() {
+            backBtn.style.display = "none";
+            viewTitle.innerText = "Challenge Categories";
+            mainGrid.innerHTML = "";
+            Object.keys(ctfData).forEach(cat => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<h3>${cat}</h3><div class="points">${ctfData[cat].length} Challenges</div>`;
+                card.onclick = () => showChallenges(cat);
+                mainGrid.appendChild(card);
+            });
+        }
+
+        function showChallenges(category) {
+            backBtn.style.display = "block";
+            viewTitle.innerText = category;
+            mainGrid.innerHTML = "";
+            const challenges = ctfData[category];
+            if (challenges.length === 0) {
+                mainGrid.innerHTML = "<p>No challenges archived here yet.</p>";
+                return;
+            }
+            challenges.forEach(ch => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<h3>${ch.name}</h3><div class="points">${ch.points} pts</div>`;
+                card.onclick = () => openModal(ch);
+                mainGrid.appendChild(card);
+            });
+        }
+
+        function openModal(challenge) {
+            document.getElementById('modal-title').innerText = challenge.name;
+            document.getElementById('modal-points').innerText = challenge.points;
+            document.getElementById('modal-author').innerText = challenge.author || "AM";
+            document.getElementById('modal-desc').innerHTML = challenge.desc;
+
+            // Handle Hints
+            const hintArea = document.getElementById('modal-hints');
+            hintArea.innerHTML = "";
+            if (challenge.hints) {
+                challenge.hints.forEach((hint, index) => {
+                    const hContainer = document.createElement('div');
+                    hContainer.className = "hint-container";
+                    hContainer.innerHTML = `<button class="hint-btn" onclick="toggleHint(${index})">View Hint ${index + 1}</button><div id="hint-${index}" class="hint-text">${hint}</div>`;
+                    hintArea.appendChild(hContainer);
+                });
+            }
+
+            // Handle Image
+            const imgArea = document.getElementById('modal-image');
+            imgArea.innerHTML = challenge.image ? `<img src="${challenge.image}" class="challenge-img">` : "";
+
+            // Handle File - Removed "./files/" prefix to look in main directory
+            const footer = document.getElementById('modal-footer');
+            footer.innerHTML = ""; // Clear existing
+
+            if (challenge.file) {
+                // If file is an array (like in "Solid Effort"), loop through them
+                if (Array.isArray(challenge.file)) {
+                    challenge.file.forEach(file => {
+                        footer.innerHTML += `<a href="${file}" download="${file}" class="download-btn" style="margin-right: 10px;">${file}</a>`;
+                    });
+                } else {
+                    // Otherwise, handle as a single string
+                    footer.innerHTML = `<a href="${challenge.file}" download="${challenge.file}" class="download-btn">${challenge.file}</a>`;
+                }
+            }
+            modal.style.display = "flex";
+        }
+
+        function toggleHint(id) {
+            const hint = document.getElementById(`hint-${id}`);
+            hint.style.display = (hint.style.display === "block") ? "none" : "block";
+        }
+
+        function closeModal() { modal.style.display = "none"; }
+        window.onclick = (e) => { if (e.target == modal) closeModal(); }
+        showCategories();
+    </script>
+
+</body>
+
+</html>
